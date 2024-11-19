@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  */
 @ControllerAdvice
 public class ErrorHandler {
-    private final static Logger log = LoggerFactory.getLogger(ErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(ErrorHandler.class);
 
     /**
      * Обработка исключения ConstraintViolationException - при проверке ограничений объекта

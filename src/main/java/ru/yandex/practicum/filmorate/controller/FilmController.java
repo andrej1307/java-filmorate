@@ -14,7 +14,7 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/films")
 public class FilmController extends AbstractController<Film> {
-    private final static Logger log = LoggerFactory.getLogger(FilmController.class);
+    private static final Logger log = LoggerFactory.getLogger(FilmController.class);
 
     /**
      * Метод поиска всех фильмов

@@ -15,7 +15,7 @@ import java.util.Collection;
 @RequestMapping("/users")
 @Validated
 public class UserController extends AbstractController<User> {
-    private final static Logger log = LoggerFactory.getLogger(UserController.class);
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     /**
      * Метод поиска всех пользователей
