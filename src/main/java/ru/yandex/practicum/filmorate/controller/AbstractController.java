@@ -1,16 +1,15 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Marker;
 import ru.yandex.practicum.filmorate.model.StorageData;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Класс работы с элементами хранилища информации
@@ -68,31 +67,15 @@ public class AbstractController<T extends StorageData> {
      * @param element - объект с обновленной информацией
      * @return - подтверждение обновленного объекта
      */
-    public T update(@Validated(OnUpdate.class) @RequestBody T element) throws ValidationException {
+    public T update(@Validated(Marker.OnUpdate.class) @RequestBody T element) throws ValidationException {
         Integer id = element.getId();
         // проверяем необходимые условия
         if (!storage.containsKey(id)) {
             throw new ValidationException(HttpStatus.NOT_FOUND,
                     "Не найден Id=" + id);
         }
-        validate(element);
         storage.put(id, element);
         return element;
-    }
-
-    /**
-     * Метод проверки аннотаций условий ограничения значений элемента
-     *
-     * @param element
-     */
-    public void validate(T element) throws ConstraintViolationException {
-        // Принудительно выполняем необходимые проверки полей обновленного объекта
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        Validator validator = factory.getValidator();
-        Set<ConstraintViolation<T>> violations = validator.validate(element);
-        if (!violations.isEmpty()) {
-            throw new ConstraintViolationException(violations);
-        }
     }
 
     /**

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Marker;
 
 import java.util.Collection;
 
@@ -34,7 +35,7 @@ public class FilmController extends AbstractController<Film> {
      * @return - подтверждение добавленного объекта
      */
     @PostMapping
-    public Film addNewFilm(@Validated @RequestBody Film film) {
+    public Film addNewFilm(@Validated(Marker.OnBasic.class) @RequestBody Film film) {
         log.info("Creating film: {}.", film.toString());
         return super.addNew(film);
     }
@@ -49,7 +50,7 @@ public class FilmController extends AbstractController<Film> {
      * @return - подтверждение обновленного объекта
      */
     @PutMapping
-    public Film updateFilm(@Validated(OnUpdate.class) @RequestBody Film updFilm) {
+    public Film updateFilm(@Validated(Marker.OnUpdate.class) @RequestBody Film updFilm) {
         Integer id = updFilm.getId();
         Film film = new Film(getElement(id));
 
@@ -69,6 +70,18 @@ public class FilmController extends AbstractController<Film> {
 
         log.info("Updating film id={} : {}", id, film.toString());
         return super.update(film);
+    }
+
+    /**
+     * Удаление всех фильмов
+     *
+     * @return - сообщение о выполнении
+     */
+    @DeleteMapping
+    public String onDelete() {
+        log.info("Deleting all films.");
+        clear();
+        return "All films deleted.";
     }
 
 }

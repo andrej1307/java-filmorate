@@ -14,22 +14,28 @@ import java.time.LocalDate;
  */
 @Data
 @ToString(callSuper = false)
-@EqualsAndHashCode(exclude = {"id", "name"}) // при сравнении не учитывать: id, name
+@EqualsAndHashCode(exclude = {"id", "name", "birthday"})
 @AllArgsConstructor
 @Validated
 public class User extends StorageData {
-    @NotNull(message = "Email не может отсутствовать.")
-    @Email(message = "Email должен удовлетворять правилам формирования почтовых адресов.")
+    @NotNull(message = "Email не может отсутствовать.",
+            groups = Marker.OnBasic.class)
+    @NotBlank(message = "Email не может быть пустым", groups = Marker.OnBasic.class)
+    @Email(message = "Email должен удовлетворять правилам формирования почтовых адресов.",
+            groups = {Marker.OnBasic.class, Marker.OnUpdate.class})
     private String email;
 
-    @NotNull(message = "login не может отсутствовать.")
-    @NotBlank(message = "login не может быть пустым")
-    @Pattern(regexp = "^[a-zA-Z0-9]{6,12}$", message = "login должен иметь длину от 6 до 12 символов, содержать буквы и цифры.")
+    @NotNull(message = "login не может отсутствовать.", groups = Marker.OnBasic.class)
+    @NotBlank(message = "login не может быть пустым", groups = Marker.OnBasic.class)
+    @Pattern(regexp = "^[a-zA-Z0-9]{6,12}$", message = "login должен иметь длину от 6 до 12 символов, содержать буквы и цифры.",
+            groups = {Marker.OnBasic.class, Marker.OnUpdate.class})
     private String login;
 
     private String name;
 
-    @Past(message = "Дата рождения не может быть в будущем.")
+    @NotNull(message = "Дата рождения должна быть определена.",
+            groups = Marker.OnBasic.class)
+    @Past(message = "Дата рождения не может быть в будущем.", groups = {Marker.OnBasic.class, Marker.OnUpdate.class})
     private LocalDate birthday;
 
     /**

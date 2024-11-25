@@ -16,22 +16,25 @@ import java.time.LocalDate;
  * Класс описания фильма.
  */
 @Data
-@ToString (callSuper = false)
+@ToString(callSuper = false)
 @EqualsAndHashCode(exclude = {"id", "description"}) // при сравнении не учитывать: id, description
 @AllArgsConstructor
 @Validated
 public class Film extends StorageData {
-    @NotNull(message = "Название фильма не может отсутствовать.")
-    @NotBlank(message = "Название фильма не может быть пустым.")
+    @NotNull(message = "Название фильма не может отсутствовать.", groups = Marker.OnBasic.class)
+    @NotBlank(message = "Название фильма не может быть пустым.",
+            groups = {Marker.OnBasic.class, Marker.OnUpdate.class})
     private String name;
 
-    @Size(min = 0, max = 200, message = "Максимальная длина описания - 200 символов.")
+    @Size(min = 0, max = 200, message = "Максимальная длина описания - 200 символов.",
+            groups = {Marker.OnBasic.class, Marker.OnUpdate.class})
     private String description;
 
-    @LegalFilmDate
+    @LegalFilmDate(groups = {Marker.OnBasic.class, Marker.OnUpdate.class})
     private LocalDate releaseDate;
 
-    @Positive(message = "Длительность фильма должна быть положительным числом")
+    @Positive(message = "Длительность фильма должна быть положительным числом",
+            groups = {Marker.OnBasic.class, Marker.OnUpdate.class})
     private int duration;
 
     /**

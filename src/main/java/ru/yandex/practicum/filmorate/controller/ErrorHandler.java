@@ -73,7 +73,7 @@ public class ErrorHandler {
      */
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorMessage> onValidationException(ValidationException exception) {
-        log.info("{} {}.",exception.getHttpStatus(), exception.getMessage());
+        log.info("{} {}.", exception.getHttpStatus(), exception.getMessage());
         return ResponseEntity
                 .status(exception.getHttpStatus())
                 .body(new ErrorMessage(exception.getMessage()));

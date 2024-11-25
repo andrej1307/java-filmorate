@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Marker;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
@@ -35,7 +36,7 @@ public class UserController extends AbstractController<User> {
      * @return - подтверждение добавленного объекта
      */
     @PostMapping
-    public User addNewUser(@Validated @RequestBody User user) {
+    public User addNewUser(@Validated(Marker.OnBasic.class) @RequestBody User user) {
         // "имя для отображения может быть пустым
         // — в таком случае будет использован логин" (ТЗ-№10)
         if (user.getName() == null || user.getName().isBlank()) {
@@ -55,7 +56,7 @@ public class UserController extends AbstractController<User> {
      * @return - подтверждение обновленного объекта
      */
     @PutMapping
-    public User updateUser(@Validated(OnUpdate.class) @RequestBody User updUser) {
+    public User updateUser(@Validated(Marker.OnUpdate.class) @RequestBody User updUser) {
         Integer id = updUser.getId();
         User user = new User(super.getElement(id));
 
@@ -75,6 +76,18 @@ public class UserController extends AbstractController<User> {
 
         log.info("Updating user id={} : {}", id, user.toString());
         return super.update(user);
+    }
+
+    /**
+     * Удаление всех пользователей
+     *
+     * @return - сообщение о выполнении
+     */
+    @DeleteMapping
+    public String onDelete() {
+        log.info("Deleting all users.");
+        clear();
+        return "All users deleted.";
     }
 
 }
