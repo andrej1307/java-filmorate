@@ -1,2 +1,4 @@
 # java-filmorate
-Template repository for Filmorate project.
+
+Спринт 10.<br>
+Используем Spring - работаем в ветке "controllers-films-users"
