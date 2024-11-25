@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.ErrorMessage;
+import ru.yandex.practicum.filmorate.model.ValidationErrorResponse;
+import ru.yandex.practicum.filmorate.model.Violation;
 
 import java.util.List;
 import java.util.stream.Collectors;

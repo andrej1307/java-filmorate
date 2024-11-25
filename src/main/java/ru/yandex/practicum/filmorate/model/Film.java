@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -21,7 +20,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Validated
 public class Film extends StorageData {
-    @NotNull(message = "Название фильма не может отсутствовать.", groups = Marker.OnBasic.class)
     @NotBlank(message = "Название фильма не может быть пустым.",
             groups = {Marker.OnBasic.class, Marker.OnUpdate.class})
     private String name;
