@@ -31,7 +31,6 @@ class FilmControllerTest {
             .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
             .create();
 
-
     /**
      * Перед каждым тестом очищаем список фильмов.
      */
@@ -67,7 +66,7 @@ class FilmControllerTest {
         mvc.perform(post("/films")
                         .content(jsonString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         // При повторном добавлении фильма
         // должен возвращаться статус 400 "BadRequest"
@@ -92,7 +91,7 @@ class FilmControllerTest {
         mvc.perform(post("/films")
                         .content(jsonString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         film.setDescription("Updated.");
         jsonString = gson.toJson(film);

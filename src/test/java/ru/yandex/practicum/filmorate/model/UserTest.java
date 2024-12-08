@@ -68,11 +68,11 @@ class UserTest {
         user.setEmail("user@domain");
         jsonString = gson.toJson(user);
         // Создание пользователя с корректным email
-        // должно возвращать статус 200 "Ok"
+        // должно возвращать статус 201 "Created"
         mvc.perform(post("/users")
                         .content(jsonString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     /**
@@ -105,11 +105,11 @@ class UserTest {
         user.setLogin("user1234");
         jsonString = gson.toJson(user);
         // Создание пользователя с корректным login (содержит только латинские буквы и цифры)
-        // должно возвращать статус 200 "Ok"
+        // должно возвращать статус 201 "Created"
         mvc.perform(post("/users")
                         .content(jsonString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     /**
@@ -137,7 +137,7 @@ class UserTest {
         mvc.perform(post("/users")
                         .content(jsonString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     /**
@@ -151,11 +151,11 @@ class UserTest {
                 LocalDate.now().minusYears(32));
         String jsonString = gson.toJson(user);
         // Создание тестового пользователя
-        // должно возвращать статус 200 "Ok"
+        // должно возвращать статус 201 "Created"
         mvc.perform(post("/users")
                         .content(jsonString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         jsonString = "{\"id\": 1, \"email\": \"user.domain@\"}";
         // Изменение пользователю email на некорректный

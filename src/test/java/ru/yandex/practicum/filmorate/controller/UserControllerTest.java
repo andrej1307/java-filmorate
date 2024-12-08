@@ -33,14 +33,13 @@ class UserControllerTest {
             .create();
 
     /**
-     * Удаляем всех пользователей
+     * Перед каждым тестом удаляем всех пользователей
      */
     @BeforeEach
-    void setUp(/*@Autowired MockMvc mvc*/) throws Exception {
+    void setUp() throws Exception {
         mvc.perform(delete("/users"))
                 .andExpect(status().isOk());
     }
-
 
     /**
      * Тестируем чтение списка пользователей
@@ -69,7 +68,7 @@ class UserControllerTest {
         mvc.perform(post("/users")
                         .content(jsonString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         // Повторное добавление пользователя
         // должно возвращать статус 400 "BadRequest"
@@ -93,7 +92,7 @@ class UserControllerTest {
         mvc.perform(post("/users")
                         .content(jsonString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         user.setLogin("user12345");
         user.setName("Updated user.");

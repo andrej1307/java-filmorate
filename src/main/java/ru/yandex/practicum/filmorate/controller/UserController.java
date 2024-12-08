@@ -1,22 +1,29 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Marker;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
 
 /**
  * Класс обработки http запросов о пользователях.
  */
+@Slf4j
 @RestController
 @RequestMapping("/users")
-@Validated
-public class UserController extends AbstractController<User> {
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
+public class UserController {
+    UserService service;
+
+    @Autowired
+    public UserController(UserService service) {
+        this.service = service;
+    }
 
     /**
      * Метод поиска всех пользователей
@@ -24,9 +31,10 @@ public class UserController extends AbstractController<User> {
      * @return - список пользователей
      */
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public Collection<User> findAllUser() {
-        log.info("Get all users {}.", super.findAll().size());
-        return super.findAll();
+        log.info("Get all users {}.", service.findAllUsers().size());
+        return service.findAllUsers();
     }
 
     /**
@@ -36,15 +44,10 @@ public class UserController extends AbstractController<User> {
      * @return - подтверждение добавленного объекта
      */
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public User addNewUser(@Validated(Marker.OnBasic.class) @RequestBody User user) {
-        // "имя для отображения может быть пустым
-        // — в таком случае будет использован логин" (ТЗ-№10)
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
         log.info("Creating user : {}.", user.toString());
-        return super.addNew(user);
+        return service.addNewUser(user);
     }
 
     /**
@@ -56,26 +59,11 @@ public class UserController extends AbstractController<User> {
      * @return - подтверждение обновленного объекта
      */
     @PutMapping
+    @ResponseStatus(HttpStatus.OK)
     public User updateUser(@Validated(Marker.OnUpdate.class) @RequestBody User updUser) {
         Integer id = updUser.getId();
-        User user = new User(super.getElement(id));
-
-        // Обновляем информаию во временном объекте
-        if (updUser.getEmail() != null) {
-            user.setEmail(updUser.getEmail());
-        }
-        if (updUser.getLogin() != null) {
-            user.setLogin(updUser.getLogin());
-        }
-        if (updUser.getName() != null) {
-            user.setName(updUser.getName());
-        }
-        if (updUser.getBirthday() != null) {
-            user.setBirthday(updUser.getBirthday());
-        }
-
-        log.info("Updating user id={} : {}", id, user.toString());
-        return super.update(user);
+        log.info("Updating user id={} : {}", id, updUser.toString());
+        return service.updateUser(updUser);
     }
 
     /**
@@ -84,10 +72,10 @@ public class UserController extends AbstractController<User> {
      * @return - сообщение о выполнении
      */
     @DeleteMapping
+    @ResponseStatus(HttpStatus.OK)
     public String onDelete() {
         log.info("Deleting all users.");
-        clear();
-        return "All users deleted.";
+        return service.removeAllUsers();
     }
 
 }
