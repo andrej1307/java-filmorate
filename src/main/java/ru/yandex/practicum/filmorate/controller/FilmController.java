@@ -41,6 +41,17 @@ public class FilmController {
     }
 
     /**
+     * Метод поиска фильма по идентификатору
+     * @param id - идентификатор
+     * @return - найденный фильм
+     */
+    @GetMapping("/{id}")
+    public Film findFilm(@PathVariable Integer id) {
+        log.info("Get film id={}.", id);
+        return service.getFilmById(id);
+    }
+
+    /**
      * Метод добавления нового фильма.
      *
      * @param film - объект для добавления
@@ -52,7 +63,6 @@ public class FilmController {
         log.info("Creating film: {}.", film.toString());
         return service.addNewFilm(film);
     }
-
 
     /**
      * Метод обновления информации о фильме.

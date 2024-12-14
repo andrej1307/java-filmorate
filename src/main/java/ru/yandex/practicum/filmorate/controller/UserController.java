@@ -33,8 +33,46 @@ public class UserController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Collection<User> findAllUser() {
-        log.info("Get all users {}.", service.findAllUsers().size());
+        log.info("Запрашиваем список всех пользователей {}.", service.findAllUsers().size());
         return service.findAllUsers();
+    }
+
+    /**
+     * Метод поиска пользователя по идентификатору
+     *
+     * @param id - идентификатор
+     * @return - найденный объект
+     */
+    @GetMapping("/{id}")
+    public User findUser(@PathVariable Integer id) {
+        log.info("Ищем пользователя id={}.", id);
+        return service.getUserById(id);
+    }
+
+    /**
+     * Поиск друзей у заданного пользователя
+     *
+     * @param id - идентификатор пользователя
+     * @return - список друзей пользователя
+     */
+    @GetMapping("/{id}/friends")
+    public Collection<User> findUsersFriends(@PathVariable Integer id) {
+        log.info("Ищем друзей пользователя id={}.", id);
+        return service.getUsersFriends(id);
+    }
+
+    /**
+     * Метод поиска общих друзей у двух пользователей
+     *
+     * @param id      - идентификатор пользователя
+     * @param otherId - идентификатор другого пользователя
+     * @return - список общих друзей
+     */
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> findCommonFriends(@PathVariable("id") Integer id,
+                                              @PathVariable("otherId") Integer otherId) {
+        log.info("Ищем общих друзей пользователй: {}, {}.", id, otherId);
+        return service.getCommonFriends(id, otherId);
     }
 
     /**
@@ -46,7 +84,7 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public User addNewUser(@Validated(Marker.OnBasic.class) @RequestBody User user) {
-        log.info("Creating user : {}.", user.toString());
+        log.info("Создаем пользователя : {}.", user.toString());
         return service.addNewUser(user);
     }
 
@@ -62,8 +100,38 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public User updateUser(@Validated(Marker.OnUpdate.class) @RequestBody User updUser) {
         Integer id = updUser.getId();
-        log.info("Updating user id={} : {}", id, updUser.toString());
+        log.info("Обновляем данные о пользователе id={} : {}", id, updUser.toString());
         return service.updateUser(updUser);
+    }
+
+    /**
+     * Метод добаления в "друзья"
+     *
+     * @param userId   - идентификатор пользоателя
+     * @param friendId - идентификатор друга
+     * @return - сообщение о добавлении друга
+     */
+    @PutMapping("/{userId}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public String addFriends(@PathVariable("userId") Integer userId,
+                             @PathVariable("friendId") Integer friendId) {
+        log.info("Добавляем в \"друзья\" пользователей id1={}, id2={}", userId, friendId);
+        return service.addFriends(userId, friendId);
+    }
+
+    /**
+     * Метод удаления пользователя из "друзей"
+     *
+     * @param id       - идентификатор пользователя
+     * @param friendId - идентификатор друга
+     * @return - сообщение о подтверждении
+     */
+    @DeleteMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public String breakUpFriends(@PathVariable("id") Integer id,
+                                 @PathVariable("friendId") Integer friendId) {
+        log.info("Удаляем из \"друзей\" пользователей id1={}, id2={}", id, friendId);
+        return service.breakUpFriends(id, friendId);
     }
 
     /**
@@ -73,8 +141,8 @@ public class UserController {
      */
     @DeleteMapping
     @ResponseStatus(HttpStatus.OK)
-    public String onDelete() {
-        log.info("Deleting all users.");
+    public String deleteAllUsers() {
+        log.info("Удаляем всех пользователей.");
         return service.removeAllUsers();
     }
 

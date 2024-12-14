@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,6 +10,10 @@ import lombok.ToString;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Класс описания пользователя.
@@ -30,8 +36,12 @@ public class User extends StorageData {
 
     private String name;
 
-    @PastOrPresent(message = "Дата рождения не может быть в будущем.", groups = {Marker.OnBasic.class, Marker.OnUpdate.class})
+    @PastOrPresent(message = "Дата рождения не может быть в будущем.",
+            groups = {Marker.OnBasic.class, Marker.OnUpdate.class})
     private LocalDate birthday;
+
+    @JsonIgnore
+    protected Set<Integer> friends = new HashSet<>();
 
     /**
      * Конструктор копирования сведений о пользователе

@@ -25,8 +25,18 @@ public class FilmService {
      * @return - список фильмов
      */
     public Collection<Film> findAllFilms() {
-        log.debug("Get all films {}.", films.findAllFilms().size());
+        log.debug("Service: Get all films {}.", films.findAllFilms().size());
         return films.findAllFilms();
+    }
+
+    /**
+     * Метод поиска фильма по идентификатору
+     * @param id - идентификатор
+     * @return - найденный фильм
+     */
+    public Film getFilmById(Integer id) {
+        log.debug("Service: Get film id={}.", id);
+        return films.getFilmById(id);
     }
 
     /**
@@ -36,7 +46,7 @@ public class FilmService {
      * @return - подтверждение добавленного объекта
      */
     public Film addNewFilm(Film film) {
-        log.debug("Creating film: {}.", film.toString());
+        log.debug("Service: Creating film: {}.", film.toString());
         return films.addNewFilm(film);
     }
 
@@ -64,7 +74,7 @@ public class FilmService {
             film.setDuration(updFilm.getDuration());
         }
 
-        log.debug("Updating film id={} : {}", id, film.toString());
+        log.debug("Service: Updating film id={} : {}", id, film.toString());
         return films.updateFilm(film);
     }
 
@@ -74,7 +84,7 @@ public class FilmService {
      * @return - сообщение о выполнении
      */
     public String onDelete() {
-        log.debug("Deleting all films.");
+        log.debug("Service: Deleting all films.");
         films.removeAllFilms();
         return "All films deleted.";
     }

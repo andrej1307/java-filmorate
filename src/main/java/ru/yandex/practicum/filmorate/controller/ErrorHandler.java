@@ -1,6 +1,9 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.ConstraintViolationException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +14,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.ErrorMessage;
-import ru.yandex.practicum.filmorate.model.ValidationErrorResponse;
-import ru.yandex.practicum.filmorate.model.Violation;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -101,4 +101,34 @@ public class ErrorHandler {
                 .body(new ErrorMessage("В запросе отсутствуют необходимые данные."));
     }
 
+}
+
+/**
+ * Класс сообщения об ошибке выполнения запроса
+ */
+@Getter
+@AllArgsConstructor
+class ErrorMessage {
+    private String error;
+}
+
+
+/**
+ * Класс для формирования ответа об обнаруженных нарушениях при проверке ограничений на данные
+ */
+@Getter
+@RequiredArgsConstructor
+class ValidationErrorResponse {
+    // список обнаруженных нарушений
+    private final List<Violation> violations;
+}
+
+/**
+ * Класс описания нарушений при проверке ограничений.
+ */
+@Getter
+@RequiredArgsConstructor
+class Violation {
+    private final String fieldName; // Наименование поля объекта
+    private final String message;   // Описание нарушения
 }

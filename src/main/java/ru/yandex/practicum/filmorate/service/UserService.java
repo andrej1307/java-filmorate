@@ -5,10 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.Storages;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Класс реализации запросов к информации о пользователях
@@ -26,7 +27,7 @@ public class UserService {
      * @return - список пользователей
      */
     public Collection<User> findAllUsers() {
-        log.debug("Get all users {}.", users.findAllUsers().size());
+        log.debug("Sevice: Get all users {}.", users.findAllUsers().size());
         return users.findAllUsers();
     }
 
@@ -43,7 +44,7 @@ public class UserService {
             user.setName(user.getLogin());
         }
 
-        log.debug("Creating user : {}.", user.toString());
+        log.debug("Sevice: Creating user : {}.", user.toString());
         return users.addNewUser(user);
     }
 
@@ -54,6 +55,7 @@ public class UserService {
      * @return - найденный объект
      */
     public User getUserById(Integer id) {
+        log.debug("Sevice: Get user {}.", id);
         return users.getUserById(id);
     }
 
@@ -83,7 +85,7 @@ public class UserService {
             user.setBirthday(updUser.getBirthday());
         }
 
-        log.debug("Updating user id={} : {}", id, user.toString());
+        log.debug("Sevice: Updating user id={} : {}", id, user.toString());
         return users.updateUser(user);
     }
 
@@ -93,8 +95,67 @@ public class UserService {
      * @return - сообщение о выполнении
      */
     public String removeAllUsers() {
-        log.debug("Deleting all users.");
+        log.debug("Sevice: Удаляем всех пользователей.");
         users.removeAllUsers();
-        return "All users deleted.";
+        return "Все пользователи удалены.";
+    }
+
+    /**
+     * Медод добавления пользователей в друзья
+     * добавление в друзья происходит взаимное без подтверждений
+     *
+     * @param id1 - идентификатор пользователя
+     * @param id2 - идентификатор друга
+     */
+    public String addFriends(Integer id1, Integer id2) {
+        // Добавление в друзья происходит без подтверждения.
+        // Еслb id1 дружит с id2, то автоматически id2 дружит с id1
+        users.addFriend(id1, id2);
+        users.addFriend(id2, id1);
+        return "Теперь друзья " + id1 + " и " + id2;
+    }
+
+    /**
+     * Метод удаления пользователя из "друзей"
+     *
+     * @param id1 - идентификатор пользователя
+     * @param id2 - идентификатор друга
+     * @return - сообщение о подтверждении
+     */
+    public String breakUpFriends(Integer id1, Integer id2) {
+        log.debug("Sevice: Удаляем из \"друзей\" пользователей {}, {}.", id1, id2);
+        users.breakUpFriends(id1, id2);
+        return id1 + ", " + id2 + " больше не друзья.";
+    }
+
+    /**
+     * Поиск всех друзей пользователя
+     *
+     * @param userId - идентификатор пользователя
+     * @return - список друзей
+     */
+    public Collection<User> getUsersFriends(Integer userId) {
+        List<User> friends = new ArrayList<>();
+        for (Integer friendId : users.findAllFriends(userId)) {
+            friends.add(users.getUserById(friendId));
+        }
+        return friends;
+    }
+
+    /**
+     * Метод поискаобщих друзей пользователей
+     *
+     * @param id1 - идентификатор пользователя
+     * @param id2 - идентификатор другого пользователя
+     * @return - список общих друзей
+     */
+    public Collection<User> getCommonFriends(Integer id1, Integer id2) {
+        List<Integer> friendsId = users.findAllFriends(id1);
+        friendsId.retainAll(users.findAllFriends(id2));
+        List<User> friends = new ArrayList<>();
+        for (Integer id : friendsId) {
+            friends.add(users.getUserById(id));
+        }
+        return friends;
     }
 }

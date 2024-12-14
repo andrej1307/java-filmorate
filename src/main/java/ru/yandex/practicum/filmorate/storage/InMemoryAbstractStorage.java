@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.StorageData;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -98,5 +99,4 @@ public class InMemoryAbstractStorage<T extends StorageData> {
     public void clear() {
         storage.clear();
     }
-
 }
