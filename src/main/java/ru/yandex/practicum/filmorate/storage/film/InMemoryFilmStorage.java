@@ -1,11 +1,12 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
 
-@Component
+@Repository("inMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
 
     private final Map<Integer, Film> films = new HashMap<>();
@@ -17,7 +18,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film addNewFilm(Film film) {
         filmId++;
         film.setId(filmId);
-        film.setRank(0);
+        // film.setRank(0);
         films.put(filmId, film);
         likes.put(filmId, new HashSet<>());
         filmsRating.add(film);
@@ -50,7 +51,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Integer addNewLike(Integer filmId, Integer userId) {
         likes.get(filmId).add(userId);
         Film film = films.get(filmId);
-        film.setRank(likes.get(filmId).size());
+        // film.setRank(likes.get(filmId).size());
         setFilmsRating(film);
         return likes.get(filmId).size();
     }
@@ -66,9 +67,18 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Integer removeLike(Integer filmId, Integer userId) {
         likes.get(filmId).remove(userId);
         Film film = films.get(filmId);
-        film.setRank(likes.get(filmId).size());
+        // film.setRank(likes.get(filmId).size());
         setFilmsRating(film);
         return likes.get(filmId).size();
+    }
+
+    @Override
+    public Integer getFilmRank(Integer filmId) {
+        int filmRank = 0;
+        if (likes.containsKey(filmId)) {
+            filmRank = likes.get(filmId).size();
+        }
+        return filmRank;
     }
 
     /**
@@ -86,18 +96,21 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (ratingSize < 2) {
             return;
         }
+
         int index = filmsRating.indexOf(film);
+
+        Integer filmRank = getFilmRank(film.getId());
 
         // Проверяем изменение рейтинга на возрастание
         while ((index > 0) &&
-                (film.getRank() > filmsRating.get(index - 1).getRank())) {
+                (filmRank > likes.get(filmsRating.get(index - 1).getId()).size())) {
             filmsRating.set(index, filmsRating.get(index - 1));
             filmsRating.set(--index, film);
         }
 
         // Проверяем изменение рейтинга на убывание
         while (index < (ratingSize - 1) &&
-                (film.getRank() < filmsRating.get(index + 1).getRank())) {
+                (filmRank < likes.get(filmsRating.get(index + 1).getId()).size())) {
             filmsRating.set(index, filmsRating.get(index + 1));
             filmsRating.set(++index, film);
         }
