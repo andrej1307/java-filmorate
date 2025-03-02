@@ -1,14 +1,12 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PastOrPresent;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 import org.springframework.validation.annotation.Validated;
+import ru.yandex.practicum.filmorate.validator.Marker;
 
 import java.time.LocalDate;
 
@@ -16,11 +14,14 @@ import java.time.LocalDate;
  * Класс описания пользователя.
  */
 @Data
-@ToString(callSuper = false)
-@EqualsAndHashCode(exclude = {"id", "name", "birthday"})
+@EqualsAndHashCode(of = {"email"})
+@NoArgsConstructor
 @AllArgsConstructor
 @Validated
-public class User extends StorageData {
+public class User {
+
+    @NotNull(groups = {Marker.OnUpdate.class}, message = "id должен быть определен")
+    protected Integer id;
 
     @NotBlank(message = "Email не может быть пустым", groups = Marker.OnBasic.class)
     @Email(message = "Email должен удовлетворять правилам формирования почтовых адресов.",
@@ -37,4 +38,11 @@ public class User extends StorageData {
     @PastOrPresent(message = "Дата рождения не может быть в будущем.",
             groups = {Marker.OnBasic.class, Marker.OnUpdate.class})
     private LocalDate birthday;
+
+    public User(String email, String login, String name, LocalDate birthday) {
+        this.email = email;
+        this.login = login;
+        this.name = name;
+        this.birthday = birthday;
+    }
 }

@@ -2,27 +2,39 @@ package ru.yandex.practicum.filmorate.controller;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.junit.jupiter.api.BeforeEach;
+import com.google.gson.reflect.TypeToken;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.yandex.practicum.filmorate.model.LocalDateAdapter;
+import org.springframework.test.web.servlet.MvcResult;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.validator.LocalDateAdapter;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Тестируем контроллер запросов данных о пользователях
+ * Тестируем контроллер запросов работы с данными о пользователях
+ * <p>
+ * Для успешного выполнения тестов, при инициализации базы данных
+ * должна быть подготовлена информация о четырех тестовых пользователях.
+ * Файл первоначальных данных ./src/test/resources/data.sql
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class UserControllerTest {
     @Autowired
     MockMvc mvc;
@@ -32,13 +44,8 @@ class UserControllerTest {
             .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
             .create();
 
-    /**
-     * Перед каждым тестом удаляем всех пользователей
-     */
-    @BeforeEach
-    void setUp() throws Exception {
-        mvc.perform(delete("/users"))
-                .andExpect(status().isOk());
+    // Определяем тип сериализации списка
+    class UserListTypeToken extends TypeToken<List<User>> {
     }
 
     /**
@@ -46,11 +53,12 @@ class UserControllerTest {
      */
     @Test
     void findAllUser() throws Exception {
-        makeUsers(3);
-
-        mvc.perform(get("/users"))
-                .andExpect(status().isOk())     // ожидается код статус 200
-                .andDo(print());
+        MvcResult result = mvc.perform(get("/users"))
+                .andExpect(status().isOk())      // ожидается код статус 200
+                .andReturn();
+        List<User> users = gson.fromJson(result.getResponse().getContentAsString(), new UserListTypeToken().getType());
+        assertTrue(!users.isEmpty(),
+                "Список пользователей пуст.");
     }
 
     /**
@@ -58,17 +66,33 @@ class UserControllerTest {
      */
     @Test
     void addNewUser() throws Exception {
-        User user = new User("User1234@domain",
-                "user1234", "test user",
-                LocalDate.now().minusYears(22));
-        String jsonString = gson.toJson(user);
+        User user = new User();
+        user.setLogin("user1234");
+        user.setName("testUserName");
+        user.setBirthday(LocalDate.now().minusYears(22));
 
-        // При успешном добавлении пользователя
-        // должен возвращаться статус 200 "Ok"
+        user.setEmail("User1234_domain@");
+        String jsonString = gson.toJson(user);
+        // При добавлении пользователя некорректным Email
+        // должен возвращаться статус 400 "BadRequest"
         mvc.perform(post("/users")
                         .content(jsonString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+                .andExpect(status().isBadRequest());
+
+        user.setEmail("User1234@domain");
+        jsonString = gson.toJson(user);
+        // При успешном добавлении пользователя
+        // должен возвращаться статус 201 "Created"
+        MvcResult result = mvc.perform(post("/users")
+                        .content(jsonString)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andReturn();
+        // Сохраняем созданного пользователя
+        User userDb = gson.fromJson(result.getResponse().getContentAsString(), User.class);
+        assertNotNull(userDb.getId(),
+                "При добавлении пользователя должен быть присвоен ненулевой идентификатор");
 
         // Повторное добавление пользователя
         // должно возвращать статус 400 "BadRequest"
@@ -83,22 +107,30 @@ class UserControllerTest {
      */
     @Test
     void updateUser() throws Exception {
-        User user = new User("User1234@domain",
-                "user0000", "testing user",
-                LocalDate.now().minusYears(22));
+        User user = new User();
+        user.setEmail("UserUpdate@domain");
+        user.setLogin("userUpdate");
+        user.setName("testUpdateUserName");
+        user.setBirthday(LocalDate.now().minusYears(22));
         String jsonString = gson.toJson(user);
 
-        // Создаем тестового пользователя
-        mvc.perform(post("/users")
+        // При успешном добавлении пользователя
+        // должен возвращаться статус 201 "Created"
+        MvcResult result = mvc.perform(post("/users")
                         .content(jsonString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andReturn();
+        // Сохраняем созданного пользователя
+        User userDb = gson.fromJson(result.getResponse().getContentAsString(), User.class);
 
-        user.setLogin("user12345");
+        // готовим данные для обновления
+        user.setLogin("userUpd12345");
         user.setName("Updated user.");
-        jsonString = gson.toJson(user);
+        user.setBirthday(LocalDate.now().minusYears(22));
 
-        // Обновление записи без идентификатора
+        jsonString = gson.toJson(user);
+        // Обновление записи без идентификатора пользователя
         // должно возвращать статус 400 "BadRequest"
         mvc.perform(put("/users")
                         .content(jsonString)
@@ -114,170 +146,155 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-        user.setId(1);
+        user.setId(userDb.getId());
         jsonString = gson.toJson(user);
         // Успешное обновление записи
         // должно возвращать статус 200 "Ok"
-        mvc.perform(put("/users")
+        result = mvc.perform(put("/users")
                         .content(jsonString)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
+        // Сохраняем пользователя из ответа после обновления
+        userDb = gson.fromJson(result.getResponse().getContentAsString(), User.class);
+
+        assertThat(userDb)
+                .usingRecursiveComparison()
+                .isEqualTo(user);
     }
 
     /**
-     * Тестируем добавление друзей
+     * Тестирование добавления "друга"
      *
      * @throws Exception
      */
     @Test
     void addFriends() throws Exception {
-        makeUsers(3);
-
         // Объявление в "друзья" несуществующего пользователя
         // должно возвращать статус 404 "NotFound"
         mvc.perform(put("/users/1000/friends/1")
-                        .content("")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         // Объявление в "друзья" несуществующего друга
         // должно возвращать статус 404 "NotFound()"
         mvc.perform(put("/users/1/friends/1000")
-                        .content("")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         // Объявление в "друзья" сущществующих пользователей
         // должно возвращать статус 200 "ok"
         mvc.perform(put("/users/1/friends/2")
-                        .content("")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        // Объявление в "друзья" сущществующих пользователей (граничный случай)
-        // должно возвращать статус 200 "ok"
-        mvc.perform(put("/users/3/friends/2")
-                        .content("")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
     /**
-     * Тестируем удаление друзей
+     * Тестирование удаления пользователя из друзей
      *
      * @throws Exception
      */
     @Test
-    void removeFriends() throws Exception {
-        addFriends();
+    void breakUpFriends() throws Exception {
+        // Добавление в "друзья" пользователея
+        // должно возвращать статус 200 "ok"
+        mvc.perform(put("/users/1/friends/2")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
         // Удаление из "друзьей"  не сущществующих пользователей
         // должно возвращать статус 404 "NotFound"
         mvc.perform(delete("/users/1/friends/1000")
-                        .content("")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         // Удаление из "друзьей" сущществующих пользователей
         // должно возвращать статус 200 "Ok"
         mvc.perform(delete("/users/1/friends/2")
-                        .content("")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
     /**
-     * Тестируем чтение списка друзей
+     * Тестирование поиска друзей пользователя
      *
      * @throws Exception
      */
     @Test
-    void getFriends() throws Exception {
-        makeUsers(3);
-
-        // Объявление в "друзья"
+    void findUsersFriends() throws Exception {
+        // Добавление в "друзья" пользователея
         // должно возвращать статус 200 "ok"
-        mvc.perform(put("/users/1/friends/2")
-                        .content("")
+        mvc.perform(put("/users/4/friends/2")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        // Объявление в "друзья"
+        // Добавление в "друзья" пользователея
         // должно возвращать статус 200 "ok"
-        mvc.perform(put("/users/3/friends/2")
-                        .content("")
+        mvc.perform(put("/users/4/friends/3")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         // читаем список "друзей", несуществующего пользователя
         // должно возвращать статус 404 "NotFound"
         mvc.perform(get("/users/2000/friends")
-                        .content("")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-
         // читаем список "друзей"
         // должно возвращать статус 200 "ok"
-        mvc.perform(get("/users/2/friends")
-                        .content("")
+        MvcResult result = mvc.perform(get("/users/4/friends")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
+        List<User> users = gson.fromJson(result.getResponse().getContentAsString(), new UserListTypeToken().getType());
+        assertTrue(users.size() == 2,
+                "Количество найденых \"друзей\" не соответствует ожидаемому.");
     }
 
     /**
-     * Тестируем поиск общих друзей
+     * Тестирование поиска общих друзей у пользователей
      *
      * @throws Exception
      */
     @Test
-    void findCommonFrends() throws Exception {
-        makeUsers(3);
-
-        // Объявление в "друзья"
-        // должно возвращать статус 200 "ok"
+    void findCommonFriends() throws Exception {
         mvc.perform(put("/users/1/friends/2")
-                        .content("")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        // Объявление в "друзья"
-        // должно возвращать статус 200 "ok"
+        mvc.perform(put("/users/1/friends/3")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        mvc.perform(put("/users/1/friends/4")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
         mvc.perform(put("/users/3/friends/2")
-                        .content("")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        mvc.perform(put("/users/3/friends/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        mvc.perform(put("/users/4/friends/2")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        mvc.perform(put("/users/4/friends/3")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         // читаем список общих "друзей"
         // должно возвращать статус 200 "ok"
-        mvc.perform(get("/users/1/friends/common/3")
-                        .content("")
+        MvcResult result = mvc.perform(get("/users/1/friends/common/4")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
+        List<User> users = gson.fromJson(result.getResponse().getContentAsString(), new UserListTypeToken().getType());
+        assertTrue(users.size() == 2,
+                "Количество общих \"друзей\" не соответствует ожидаемому.");
     }
 
-    /**
-     * Создание тестовых пользователей
-     *
-     * @param count - требуемое клличество тестовых пользователей
-     * @throws Exception
-     */
-    void makeUsers(int count) throws Exception {
-        StringBuilder fBuilder = new StringBuilder();
-        fBuilder.append("{\"email\": \"user000%d@domain\",");
-        fBuilder.append("\"login\": \"USER000%d\",");
-        fBuilder.append("\"name\": \"userName00%d\",");
-        fBuilder.append("\"birthday\": \"2000-01-%02d\"}");
-        String formatStr = fBuilder.toString();
-
-        for (int i = 1; i <= count; i++) {
-            String jsonString = String.format(formatStr, i, i, i, i);
-            // При успешном добавлении пользователя
-            // должен возвращаться статус 200 "Ok"
-            mvc.perform(post("/users")
-                            .content(jsonString)
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isCreated());
-        }
-    }
 }

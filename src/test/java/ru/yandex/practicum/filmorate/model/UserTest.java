@@ -1,3 +1,4 @@
+
 package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.ConstraintViolation;
@@ -6,6 +7,7 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.validator.Marker;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -15,10 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Тестирование ограничений на значения полей класса User.
- * Автономный тест (Junit).
  */
-// @SpringBootTest
-// @AutoConfigureMockMvc
 class UserTest {
     private Validator validator;
 

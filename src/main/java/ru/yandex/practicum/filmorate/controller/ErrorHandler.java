@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -9,11 +10,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.ErrorMessage;
-import ru.yandex.practicum.filmorate.model.ValidationErrorResponse;
-import ru.yandex.practicum.filmorate.model.Violation;
+import ru.yandex.practicum.filmorate.validator.ValidationErrorResponse;
+import ru.yandex.practicum.filmorate.validator.Violation;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -85,6 +87,13 @@ public class ErrorHandler {
         return new ErrorMessage(exception.getMessage());
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorMessage notFoundData(DataAccessException exception) {
+        return new ErrorMessage(exception.getMessage());
+    }
+
+
     /**
      * Обработка исключения HttpMessageNotReadableException при поступлении пустого запроса
      *
@@ -99,6 +108,14 @@ public class ErrorHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorMessage("В запросе отсутствуют необходимые данные."));
+    }
+
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorMessage internalException(final InternalServerException e) {
+        log.warn("Error", e);
+        return new ErrorMessage(e.getMessage());
     }
 
     /**

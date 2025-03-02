@@ -1,3 +1,4 @@
+
 package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.ConstraintViolation;
@@ -6,6 +7,7 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.validator.Marker;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -15,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Тестирование ограничений на значения полей класса Film
- * Автономный тест (Junit).
  */
 class FilmTest {
     private Validator validator;
@@ -34,10 +35,12 @@ class FilmTest {
      */
     @Test
     void testName() {
-        Film film = new Film("",
-                "Testing film.name",
-                LocalDate.now().minusYears(10),
-                60, 0);
+        Film film = new Film();
+        film.setName("");
+        film.setDescription("Testing film");
+        film.setReleaseDate(LocalDate.now().minusYears(10));
+        film.setDuration(60);
+        film.setMpa(new Mpa(1));
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film, Marker.OnBasic.class);
         assertFalse(violations.isEmpty());
@@ -48,14 +51,16 @@ class FilmTest {
      */
     @Test
     void testDescription() {
-        Film film = new Film("Film",
-                "12345678901234567890123456789012345678901234567890"
-                        + "12345678901234567890123456789012345678901234567890"
-                        + "12345678901234567890123456789012345678901234567890"
-                        + "12345678901234567890123456789012345678901234567890"
-                        + "12345678901234567890123456789012345678901234567890",
-                LocalDate.now().minusYears(10),
-                60, 0);
+        Film film = new Film();
+        film.setName("Film");
+        film.setDescription("12345678901234567890123456789012345678901234567890"
+                + "12345678901234567890123456789012345678901234567890"
+                + "12345678901234567890123456789012345678901234567890"
+                + "12345678901234567890123456789012345678901234567890"
+                + "12345678901234567890123456789012345678901234567890");
+        film.setReleaseDate(LocalDate.now().minusYears(10));
+        film.setDuration(60);
+        film.setMpa(new Mpa(1));
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film, Marker.OnBasic.class);
         assertFalse(violations.isEmpty());
@@ -66,14 +71,18 @@ class FilmTest {
      */
     @Test
     void testReleaseDate() {
-        Film film = new Film("Film",
-                "Testing film.releaseDate",
-                LocalDate.now().plusDays(1),
-                60, 0);
+        Film film = new Film();
+        film.setName("Film");
+        film.setDescription("Testing film ReleaseDate");
+        film.setReleaseDate(LocalDate.now().plusDays(1));
+        film.setDuration(60);
+        film.setMpa(new Mpa(1));
 
+        // Проверяем на контроль даты в будущем
         Set<ConstraintViolation<Film>> violations = validator.validate(film, Marker.OnBasic.class);
         assertFalse(violations.isEmpty());
 
+        // Проверяем на контроль минимальной даты выхода фильма
         film.setReleaseDate(LocalDate.of(1895, 12, 27));
 
         violations.clear();
@@ -86,10 +95,12 @@ class FilmTest {
      */
     @Test
     void testDuration() {
-        Film film = new Film("Film",
-                "Testing film.duration",
-                LocalDate.now().minusYears(10),
-                0, 0);
+        Film film = new Film();
+        film.setName("Film");
+        film.setDescription("Testing film ReleaseDate");
+        film.setReleaseDate(LocalDate.now().minusYears(10));
+        film.setDuration(0);
+        film.setMpa(new Mpa(1));
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film, Marker.OnBasic.class);
         assertFalse(violations.isEmpty());
@@ -100,10 +111,12 @@ class FilmTest {
      */
     @Test
     void testFilmOk() {
-        Film film = new Film("Film Ok",
-                "Testing film",
-                LocalDate.now().minusYears(10),
-                60, 0);
+        Film film = new Film();
+        film.setName("Film");
+        film.setDescription("Testing film ReleaseDate");
+        film.setReleaseDate(LocalDate.now().minusYears(10));
+        film.setDuration(60);
+        film.setMpa(new Mpa(1));
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film, Marker.OnBasic.class);
         assertTrue(violations.isEmpty(), violations.toString());
